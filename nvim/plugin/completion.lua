@@ -24,6 +24,7 @@ local function complete_with_source(source)
   end
 end
 
+vim.api.nvim_set_hl(0, 'CmpGhostText', { link = 'Comment', default = true })
 cmp.setup {
   completion = {
     completeopt = 'menu,menuone,noinsert',
@@ -52,6 +53,10 @@ cmp.setup {
       require('luasnip').lsp_expand(args.body) -- For `luasnip` users.
     end,
   },
+  window = {
+    completion = cmp.config.window.bordered(),
+    documentation = cmp.config.window.bordered(),
+  },
   mapping = {
     ['<C-b>'] = cmp.mapping(function(_)
       if cmp.visible() then
@@ -67,7 +72,7 @@ cmp.setup {
         complete_with_source('path')
       end
     end, { 'i', 'c', 's' }),
-    ['<C-n>'] = cmp.mapping(function(fallback)
+    ['<C-j>'] = cmp.mapping(function(fallback)
       if cmp.visible() then
         cmp.select_next_item()
       -- expand_or_jumpable(): Jump outside the snippet region
@@ -80,7 +85,7 @@ cmp.setup {
         fallback()
       end
     end, { 'i', 'c', 's' }),
-    ['<C-p>'] = cmp.mapping(function(fallback)
+    ['<C-h>'] = cmp.mapping(function(fallback)
       if cmp.visible() then
         cmp.select_prev_item()
       elseif luasnip.jumpable(-1) then
@@ -90,16 +95,40 @@ cmp.setup {
       end
     end, { 'i', 'c', 's' }),
     -- toggle completion
-    ['<C-e>'] = cmp.mapping(function(_)
+    ['<CR>'] = cmp.mapping(function(fallback)
       if cmp.visible() then
-        cmp.close()
+        if luasnip.expandable() then
+          luasnip.expand()
+        else
+          cmp.confirm {
+            select = true,
+          }
+        end
       else
-        cmp.complete()
+        fallback()
       end
-    end, { 'i', 'c', 's' }),
-    ['<C-y>'] = cmp.mapping.confirm {
-      select = true,
-    },
+    end),
+
+    ['<Tab>'] = cmp.mapping(function(fallback)
+      if cmp.visible() then
+        cmp.select_next_item()
+      elseif luasnip.locally_jumpable(1) then
+        luasnip.jump(1)
+      else
+        fallback()
+      end
+    end, { 'i', 's' }),
+
+    ['<S-Tab>'] = cmp.mapping(function(fallback)
+      if cmp.visible() then
+        cmp.select_prev_item()
+      elseif luasnip.locally_jumpable(-1) then
+        luasnip.jump(-1)
+      else
+        fallback()
+      end
+    end, { 'i', 's' }),
+    ['<C-Space>'] = cmp.mapping.complete(),
   },
   sources = cmp.config.sources {
     -- The insertion order influences the priority of the sources
@@ -119,7 +148,7 @@ cmp.setup {
 
 cmp.setup.filetype('lua', {
   sources = cmp.config.sources {
-    { name = 'nvim_lua' },
+    -- { name = 'nvim_lua' }, -- use neodev instead
     { name = 'nvim_lsp', keyword_length = 3 },
     { name = 'path' },
   },
@@ -147,6 +176,10 @@ cmp.setup.cmdline(':', {
     { name = 'path' },
   },
 })
+
+-- enable autopairs
+local cmp_autopairs = require('nvim-autopairs.completion.cmp')
+cmp.event:on('confirm_done', cmp_autopairs.on_confirm_done())
 
 vim.keymap.set({ 'i', 'c', 's' }, '<C-n>', cmp.complete, { noremap = false, desc = '[cmp] complete' })
 vim.keymap.set({ 'i', 'c', 's' }, '<C-f>', function()

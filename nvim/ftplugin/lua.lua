@@ -1,7 +1,6 @@
 vim.bo.comments = ':---,:--'
-
+local nvim_lsp = require('lspconfig')
 local lua_ls_cmd = 'lua-language-server'
-
 -- Check if lua-language-server is available
 if vim.fn.executable(lua_ls_cmd) ~= 1 then
   return
@@ -18,7 +17,13 @@ local root_files = {
   '.git',
 }
 
+require('neodev').setup { -- do neodev config
+  lspconfig = false,
+  -- add any options here, or leave empty to use the default settings
+}
+
 vim.lsp.start {
+  before_init = require('neodev.lsp').before_init,
   name = 'luals',
   cmd = { lua_ls_cmd },
   root_dir = vim.fs.dirname(vim.fs.find(root_files, { upward = true })[1]),

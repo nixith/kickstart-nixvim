@@ -1,0 +1,23 @@
+{
+  "neodev": {
+    "library": {
+      "enabled": true,
+      "runtime": true,
+      "types": true,
+      "plugins": true
+    },
+    "pathStrict": true
+  },
+  "lspconfig": {
+    "nixd": {
+      "nixd": {
+        "nixpkgs": {
+          "expr": "import (builtins.getFlake (\"git+file://\" + toString ./.)).inputs.nixpkgs { overlays = [(builtins.getFlake (\"git+file://\" + toString ./.)).overlays.default];}   "
+        },
+        "formatting": {
+          "command": [ "nix, fmt"]
+        }
+      }
+    }
+  }
+}
